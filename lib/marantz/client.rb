@@ -1,4 +1,6 @@
-require 'xml'
+require 'nokogiri'
+require 'uri'
+require 'net/http'
 
 module Marantz
   class Client
@@ -63,15 +65,17 @@ module Marantz
       uri = URI('http://' + Marantz.config.host + PATHS[:status])
       uri.query = URI.encode_www_form({ _: Time.now.to_i * 1_000 })
       response = Net::HTTP.get(uri)
-      parser = XML::Parser.string(response, encoding: XML::Encoding::UTF_8)
-      doc = parser.parse
+      #parser = XML::Parser.string(response, encoding: XML::Encoding::UTF_8)
+      xmldoc = Nokogiri::XML(response)
+      #puts xmldoc
       {
-        power: doc.find('//Power').first.content,
-        source: SOURCES.key(doc.find('//NetFuncSelect').first.content) || :unknown,
-        volume: volume_to_db(doc.find('//MasterVolume').first.content),
-        model: SUPPORTED_MODELS[doc.find('//ModelId').first.content.to_i]
+        power: xmldoc.xpath('//Power').first.content,
+        source: SOURCES.key(xmldoc.xpath('//NetFuncSelect').first.content) || :unknown,
+        volume: volume_to_db(xmldoc.xpath('//MasterVolume').first.content),
+        model: SUPPORTED_MODELS[xmldoc.xpath('//ModelId').first.content.to_i]
       }
     end
+
 
     def perform(path, commands)
       commands = ([commands].flatten << 'aspMainZone_WebUpdateStatus')

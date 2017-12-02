@@ -16,7 +16,8 @@ module Marantz
     iradio: 'IRADIO',
     hdradio: 'HDRADIO',
     internet: 'NET/USB',
-    mpd: 'MPLAY'
+    mpd: 'MPLAY',
+    box: 'BD'
   }
   SUPPORTED_MODELS = {
     1 => 'SR7005',

@@ -9,7 +9,15 @@ module Marantz
     end
 
     def source=(name)
-      perform(PATHS[:main_zone], COMMANDS[:source] % (SOURCES[name] or raise UnknownSource))
+      src = SOURCES[name]
+      if name == 'mpd'
+         src = 'MPLAY'
+      end
+      if name == 'box'
+         src = 'BD'
+      end
+      perform(PATHS[:main_zone], COMMANDS[:source] % (SOURCES[name] or src))
+      # perform(PATHS[:main_zone], COMMANDS[:source] % (SOURCES[name] or raise UnknownSource))
     end
 
     def source
@@ -65,10 +73,12 @@ module Marantz
       uri = URI('http://' + Marantz.config.host + PATHS[:status])
       uri.query = URI.encode_www_form({ _: Time.now.to_i * 1_000 })
       response = Net::HTTP.get(uri)
-      xmldoc = Nokogiri::XML(response, nil, 'UTF-8')
+      #parser = XML::Parser.string(response, encoding: XML::Encoding::UTF_8)
+      xmldoc = Nokogiri::XML(response)
+      #puts xmldoc
       {
         power: xmldoc.xpath('//Power').first.content,
-        source: SOURCES.key(xmldoc.xpath('//NetFuncSelect').first.content) || :unknown,
+        source: xmldoc.xpath('//InputFuncSelect').first.content,
         volume: volume_to_db(xmldoc.xpath('//MasterVolume').first.content),
         model: SUPPORTED_MODELS[xmldoc.xpath('//ModelId').first.content.to_i]
       }

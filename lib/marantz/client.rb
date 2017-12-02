@@ -65,9 +65,7 @@ module Marantz
       uri = URI('http://' + Marantz.config.host + PATHS[:status])
       uri.query = URI.encode_www_form({ _: Time.now.to_i * 1_000 })
       response = Net::HTTP.get(uri)
-      #parser = XML::Parser.string(response, encoding: XML::Encoding::UTF_8)
-      xmldoc = Nokogiri::XML(response)
-      #puts xmldoc
+      xmldoc = Nokogiri::XML(response, nil, 'UTF-8')
       {
         power: xmldoc.xpath('//Power').first.content,
         source: SOURCES.key(xmldoc.xpath('//NetFuncSelect').first.content) || :unknown,
